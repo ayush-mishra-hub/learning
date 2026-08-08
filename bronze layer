@@ -1,0 +1,47 @@
+# code for bronze layer
+
+import os
+import pandas as pd
+from datetime import datetime
+
+source_path=r"C:\Users\Ayush\Downloads\Data Lake"
+dest_path=r"D:\data\bronze_layer"
+
+with open(rf'D:\data\latest_load_date.txt','r') as f:
+    date_str=f.read().strip()
+    current_date=datetime.strptime(date_str,'%Y-%m-%d %H:%M:%S.%f')
+
+for file in os.listdir(source_path):
+    print(f'Working on: {file}')
+
+    file_path = os.path.join(source_path, file)
+    mod_date=datetime.fromtimestamp(os.path.getmtime(file_path))
+
+
+    file_name = os.path.splitext(file)[0]
+
+    if mod_date>current_date:
+        if file.endswith('.csv'):
+            df=pd.read_csv(file_path)
+            df['load_date']=current_date
+            df['file_name']=file_name
+            file_name=file_name+'_bronze.csv'
+            df.to_csv(rf'{dest_path}\{file_name}',index=False)
+            print(f'{file_name} created successfully')
+        else:
+            df = pd.read_excel(file_path)
+            df['load_date'] = current_date
+            df['file_name'] = file_name
+            file_name = file_name + '_bronze.xlsx'
+            df.to_excel(rf'{dest_path}\{file_name}', index=False)
+            print(f'{file_name} created successfully')
+    else:
+        print('No new file found')
+    print()
+
+latest_load_date=datetime.today()
+with open(rf'D:\data\latest_load_date.txt','w') as f:
+    f.write(str(latest_load_date))
+    print('Date process date stored successfully')
+
+
